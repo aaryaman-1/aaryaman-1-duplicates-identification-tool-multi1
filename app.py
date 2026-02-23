@@ -126,7 +126,7 @@ Manual Mode Notes:
         output = buffer.getvalue()
 
         st.subheader("Output")
-        st.text_area("Result", output, height=300)
+        st.code(output, language="text")
 
 
 # =========================================================
@@ -218,6 +218,7 @@ elif mode == "Excel File Extraction":
         output = buffer.getvalue()
 
         st.subheader("Output")
-        st.text_area("Result", output, height=300)
+        st.code(output, language="text")
+
 
 
