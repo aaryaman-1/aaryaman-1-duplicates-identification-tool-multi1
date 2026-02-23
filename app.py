@@ -191,34 +191,33 @@ elif mode == "Excel File Extraction":
         # Cached Excel load (NEW)
         df_master = cached_load_excel(uploaded_file)
 
-        other_product_numbers_all = []
-        other_ecdvs_all = []
-
-        for date in new_dates:
-
-            other_product_numbers, other_ecdvs = extract_filtered_excel_inputs(
-                df_master=df_master,
-                code_function=code_function,
-                new_product_NFCdate=date
-            )
-
-            other_product_numbers_all.extend(other_product_numbers)
-            other_ecdvs_all.extend(other_ecdvs)
-
         buffer = io.StringIO()
 
         with contextlib.redirect_stdout(buffer):
-            find_duplicates_multi_new(
-                new_ecdvs,
-                other_ecdvs_all,
-                new_product_numbers,
-                other_product_numbers_all
-            )
+
+            # ----------------------------------------------------
+            # Each NEW part compared with its own NFC filtered rows
+            # ----------------------------------------------------
+            for i in range(len(new_product_numbers)):
+
+                other_product_numbers, other_ecdvs = extract_filtered_excel_inputs(
+                    df_master=df_master,
+                    code_function=code_function,
+                    new_product_NFCdate=new_dates[i]
+                )
+
+                find_duplicates_multi_new(
+                    [new_ecdvs[i]],
+                    other_ecdvs,
+                    [new_product_numbers[i]],
+                    other_product_numbers
+                )
 
         output = buffer.getvalue()
 
         st.subheader("Output")
         st.code(output, language="text")
+
 
 
 
