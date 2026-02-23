@@ -188,7 +188,7 @@ elif mode == "Excel File Extraction":
             st.error("Mismatch: New Product Numbers vs NFC Dates.")
             st.stop()
 
-        # Cached Excel load (NEW)
+        # Cached Excel load
         df_master = cached_load_excel(uploaded_file)
 
         buffer = io.StringIO()
@@ -196,7 +196,7 @@ elif mode == "Excel File Extraction":
         with contextlib.redirect_stdout(buffer):
 
             # ----------------------------------------------------
-            # Each NEW part compared with its own NFC filtered rows
+            # NEW vs EXISTING (date-filtered per new part)
             # ----------------------------------------------------
             for i in range(len(new_product_numbers)):
 
@@ -213,11 +213,17 @@ elif mode == "Excel File Extraction":
                     other_product_numbers
                 )
 
+            # ----------------------------------------------------
+            # NEW vs NEW (CRITICAL FIX - previously missing)
+            # ----------------------------------------------------
+            find_duplicates_multi_new(
+                new_ecdvs,
+                [],
+                new_product_numbers,
+                []
+            )
+
         output = buffer.getvalue()
 
         st.subheader("Output")
         st.code(output, language="text")
-
-
-
-
