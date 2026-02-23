@@ -61,13 +61,13 @@ if mode == "Manual User Input":
 
     with col1:
         new_product_numbers_text = st.text_area(
-            "New / Modified Product Numbers (one per line)",
+            "New/Modified Product Numbers (one per line)",
             height=200
         )
 
     with col2:
         new_ecdvs_text = st.text_area(
-            "New / Modified Product's ECDVs (one per line)",
+            "New/Modified Product ECDVs (one per line)",
             height=200
         )
 
@@ -85,7 +85,7 @@ if mode == "Manual User Input":
 
     with col4:
         other_ecdvs_text = st.text_area(
-            "Existing ECDVs (one per line)",
+            "Existing Product ECDVs (one per line)",
             height=200
         )
 
@@ -141,19 +141,19 @@ elif mode == "Excel File Extraction":
 
     with col1:
         new_product_numbers_text = st.text_area(
-            "New Product Numbers (one per line)",
+            "New/Modified Product Numbers (one per line)",
             height=200
         )
 
     with col2:
         new_ecdvs_text = st.text_area(
-            "New Product's ECDVs (one per line)",
+            "New/Modified Product ECDVs (one per line)",
             height=200
         )
 
     with col3:
         new_dates_text = st.text_area(
-            "New NFC Dates (YYYY-MM-DD)",
+            "New/Modified Product NFC Dates (YYYY-MM-DD)",
             height=200
         )
 
@@ -219,4 +219,5 @@ elif mode == "Excel File Extraction":
 
         st.subheader("Output")
         st.text_area("Result", output, height=300)
+
 
