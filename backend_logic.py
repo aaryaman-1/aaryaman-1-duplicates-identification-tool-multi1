@@ -1,7 +1,8 @@
 import pandas as pd
 import re
 from datetime import datetime
-
+import io
+import contextlib
 
 # =========================================================
 # NEW HELPER (CM + FAMILY EXTRACTION)
@@ -444,6 +445,7 @@ def extract_filtered_excel_inputs(
 # =========================================================
 # One new wrapper function
 # =========================================================
+
 def find_duplicates_multi_new(
         new_ecdvs,
         other_ecdvs,
@@ -453,25 +455,61 @@ def find_duplicates_multi_new(
     """
     Wrapper layer.
     Does not modify original logic.
+    Only controls output formatting.
     """
 
-    # New vs Existing
-    for i in range(len(new_ecdvs)):
-        find_duplicates_one_to_many(
-            new_ecdvs[i],
-            other_ecdvs,
-            new_product_numbers[i],
-            other_product_numbers
-        )
+    overall_output = []
+    duplicates_found_anywhere = False
 
-    # New vs New
-    print("\nChecking duplicates among NEW parts...\n")
-
+    # ---------------------------------------------------
+    # NEW vs EXISTING
+    # ---------------------------------------------------
     for i in range(len(new_ecdvs)):
-        for j in range(i + 1, len(new_ecdvs)):
+
+        buffer = io.StringIO()
+
+        with contextlib.redirect_stdout(buffer):
             find_duplicates_one_to_many(
                 new_ecdvs[i],
-                [new_ecdvs[j]],
+                other_ecdvs,
                 new_product_numbers[i],
-                [new_product_numbers[j]]
+                other_product_numbers
             )
+
+        text = buffer.getvalue().strip()
+
+        if text and "No duplicates are forming" not in text:
+            duplicates_found_anywhere = True
+            overall_output.append(text)
+
+    # ---------------------------------------------------
+    # NEW vs NEW
+    # ---------------------------------------------------
+    for i in range(len(new_ecdvs)):
+        for j in range(i + 1, len(new_ecdvs)):
+
+            buffer = io.StringIO()
+
+            with contextlib.redirect_stdout(buffer):
+                find_duplicates_one_to_many(
+                    new_ecdvs[i],
+                    [new_ecdvs[j]],
+                    new_product_numbers[i],
+                    [new_product_numbers[j]]
+                )
+
+            text = buffer.getvalue().strip()
+
+            if text and "No duplicates are forming" not in text:
+                duplicates_found_anywhere = True
+                overall_output.append(text)
+
+    # ---------------------------------------------------
+    # FINAL PRINT
+    # ---------------------------------------------------
+    if duplicates_found_anywhere:
+        for block in overall_output:
+            print(block)
+    else:
+        print("\nNo duplicates are forming with the existing parts.")
+
