@@ -1,131 +1,116 @@
 import streamlit as st
+import pandas as pd
 import io
 import contextlib
 
 from backend_logic import (
-    find_duplicates_multi_new,
     load_excel_master_dataframe,
-    extract_filtered_excel_inputs
+    extract_filtered_excel_inputs,
+    find_duplicates_multi_new
 )
-
-# =========================================================
-# PAGE CONFIG
-# =========================================================
 
 st.set_page_config(
-    page_title="ECDV Duplicate Detection Tool",
-    layout="centered"
+    page_title="Duplicates Identification Tool",
+    layout="wide"
 )
 
-st.title("ECDV Duplicate Detection Tool")
-
-st.markdown("""
-### Instructions
-
-Two input modes are available:
-
-**Manual Mode**
-- Enter new products and their ECDVs
-- Enter existing products and their ECDVs
-
-**Excel Mode**
-- Upload Excel file
-- Enter Code Function
-- Enter New Product NFC Dates (one per line)
-
-Each line corresponds to one product.
-""")
+st.title("Duplicates Identification Tool")
 
 # =========================================================
-# HELPER FUNCTIONS (UI LAYER ONLY)
+# CACHE EXCEL LOADING (1 DAY CACHE)
 # =========================================================
 
-def parse_multiline_input(text):
-    """
-    Converts multiline text input into clean list.
-    """
-    if not text:
-        return []
-
-    return [
-        line.strip()
-        for line in text.split("\n")
-        if line.strip()
-    ]
-
-
-# ---------------------------------------------------------
-# Cache Excel loader (load once per session/day)
-# ---------------------------------------------------------
-@st.cache_data
+@st.cache_data(ttl=86400)
 def cached_load_excel(uploaded_file):
+    """
+    Cache Excel for 1 day.
+    Prevents repeated heavy MBOM loading.
+    """
     return load_excel_master_dataframe(uploaded_file)
 
 
 # =========================================================
-# INPUT MODE SELECTION
+# HELPER
+# =========================================================
+
+def multiline_to_list(text):
+    if not text:
+        return []
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+# =========================================================
+# MODE SELECTOR
 # =========================================================
 
 mode = st.radio(
     "Select Input Method",
-    ["Manual Input", "Excel Extraction"]
+    ["Manual User Input", "Excel File Extraction"],
+    horizontal=True
 )
-
-st.divider()
-
-# =========================================================
-# COMMON INPUTS (NEW PARTS)
-# =========================================================
-
-st.subheader("New Products")
-
-new_product_numbers_text = st.text_area(
-    "New Product Numbers (one per line)",
-    height=150
-)
-
-new_ecdvs_text = st.text_area(
-    "New Product ECDVs (one per line)",
-    height=200
-)
-
-new_product_numbers = parse_multiline_input(new_product_numbers_text)
-new_ecdvs = parse_multiline_input(new_ecdvs_text)
-
 
 # =========================================================
 # MANUAL MODE
 # =========================================================
 
-if mode == "Manual Input":
+if mode == "Manual User Input":
 
-    st.subheader("Existing Products")
+    st.subheader("New / Modified Parts")
 
-    other_product_numbers_text = st.text_area(
-        "Existing Product Numbers (one per line)",
-        height=150
+    col1, col2 = st.columns(2)
+
+    with col1:
+        new_product_numbers_text = st.text_area(
+            "New / Modified Product Numbers (one per line)",
+            height=200
+        )
+
+    with col2:
+        new_ecdvs_text = st.text_area(
+            "New / Modified ECDVs (one per line)",
+            height=200
+        )
+
+    st.markdown("---")
+
+    st.subheader("Existing Parts")
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        other_product_numbers_text = st.text_area(
+            "Existing Product Numbers (one per line)",
+            height=200
+        )
+
+    with col4:
+        other_ecdvs_text = st.text_area(
+            "Existing ECDVs (one per line)",
+            height=200
+        )
+
+    st.info(
+        """
+Manual Mode Notes:
+- Date filtering must be done manually.
+- Enter only same Code Function parts.
+"""
     )
 
-    other_ecdvs_text = st.text_area(
-        "Existing Product ECDVs (one per line)",
-        height=200
-    )
+    if st.button("Check Duplicate"):
 
-    other_product_numbers = parse_multiline_input(other_product_numbers_text)
-    other_ecdvs = parse_multiline_input(other_ecdvs_text)
+        new_product_numbers = multiline_to_list(new_product_numbers_text)
+        new_ecdvs = multiline_to_list(new_ecdvs_text)
 
-    if st.button("Run Duplicate Check"):
-
-        if not new_product_numbers or not new_ecdvs:
-            st.error("Please enter New Product data.")
-            st.stop()
+        other_product_numbers = multiline_to_list(other_product_numbers_text)
+        other_ecdvs = multiline_to_list(other_ecdvs_text)
 
         if len(new_product_numbers) != len(new_ecdvs):
-            st.error("Mismatch between New Product Numbers and New ECDVs.")
+            st.error("Mismatch: New Product Numbers vs New ECDVs.")
             st.stop()
 
         if len(other_product_numbers) != len(other_ecdvs):
-            st.error("Mismatch between Existing Product Numbers and Existing ECDVs.")
+            st.error("Mismatch: Existing Product Numbers vs Existing ECDVs.")
             st.stop()
 
         buffer = io.StringIO()
@@ -140,89 +125,97 @@ if mode == "Manual Input":
 
         output = buffer.getvalue()
 
-        st.subheader("Results")
-        st.text(output)
+        st.subheader("Output")
+        st.text_area("Result", output, height=300)
 
 
 # =========================================================
 # EXCEL MODE
 # =========================================================
 
-else:
+elif mode == "Excel File Extraction":
 
-    st.subheader("Excel Extraction")
+    st.subheader("New / Modified Parts")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        new_product_numbers_text = st.text_area(
+            "New Product Numbers (one per line)",
+            height=200
+        )
+
+    with col2:
+        new_ecdvs_text = st.text_area(
+            "New ECDVs (one per line)",
+            height=200
+        )
+
+    with col3:
+        new_dates_text = st.text_area(
+            "New NFC Dates (YYYY-MM-DD)",
+            height=200
+        )
+
+    st.markdown("---")
+
+    code_function = st.text_input("Code Function")
 
     uploaded_file = st.file_uploader(
-        "Upload Excel File",
+        "Upload MBOM Extraction Excel",
         type=["xlsx"]
     )
 
-    code_function = st.text_input(
-        "Code Function"
-    )
-
-    new_dates_text = st.text_area(
-        "New Product NFC Dates (one per line, YYYY-MM-DD)",
-        height=150
-    )
-
-    new_dates = parse_multiline_input(new_dates_text)
-
-    if st.button("Run Duplicate Check"):
+    if st.button("Check Duplicate"):
 
         if uploaded_file is None:
-            st.error("Please upload Excel file.")
+            st.error("Upload Excel file first.")
             st.stop()
 
         if not code_function:
             st.error("Enter Code Function.")
             st.stop()
 
-        if not new_product_numbers or not new_ecdvs:
-            st.error("Enter New Product data.")
-            st.stop()
+        new_product_numbers = multiline_to_list(new_product_numbers_text)
+        new_ecdvs = multiline_to_list(new_ecdvs_text)
+        new_dates = multiline_to_list(new_dates_text)
 
         if len(new_product_numbers) != len(new_ecdvs):
-            st.error("Mismatch between New Product Numbers and New ECDVs.")
+            st.error("Mismatch: New Product Numbers vs ECDVs.")
             st.stop()
 
         if len(new_product_numbers) != len(new_dates):
-            st.error("Each New Product must have one NFC date.")
+            st.error("Mismatch: New Product Numbers vs NFC Dates.")
             st.stop()
 
-        # ------------------------------------------
-        # Load Excel (cached)
-        # ------------------------------------------
+        # Cached Excel load (NEW)
         df_master = cached_load_excel(uploaded_file)
 
-        other_product_numbers = []
-        other_ecdvs = []
+        other_product_numbers_all = []
+        other_ecdvs_all = []
 
-        # ------------------------------------------
-        # Run extraction for each NFC date
-        # ------------------------------------------
         for date in new_dates:
 
-            prod_nums, ecdvs = extract_filtered_excel_inputs(
+            other_product_numbers, other_ecdvs = extract_filtered_excel_inputs(
                 df_master=df_master,
                 code_function=code_function,
                 new_product_NFCdate=date
             )
 
-            other_product_numbers.extend(prod_nums)
-            other_ecdvs.extend(ecdvs)
+            other_product_numbers_all.extend(other_product_numbers)
+            other_ecdvs_all.extend(other_ecdvs)
 
         buffer = io.StringIO()
 
         with contextlib.redirect_stdout(buffer):
             find_duplicates_multi_new(
                 new_ecdvs,
-                other_ecdvs,
+                other_ecdvs_all,
                 new_product_numbers,
-                other_product_numbers
+                other_product_numbers_all
             )
 
         output = buffer.getvalue()
 
-        st.subheader("Results")
-        st.text(output)
+        st.subheader("Output")
+        st.text_area("Result", output, height=300)
