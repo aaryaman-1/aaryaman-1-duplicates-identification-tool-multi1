@@ -510,6 +510,8 @@ def find_duplicates_multi_new(
     if duplicates_found_anywhere:
         for block in overall_output:
             print(block)
+            print()
     else:
         print("\nNo duplicates are forming with the existing parts.")
+
 
