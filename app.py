@@ -41,19 +41,22 @@ def multiline_to_list(text):
 
 def clean_output_text(output: str):
     """
-    Remove 'No duplicates...' if duplicates exist anywhere.
-    Pure formatting layer. No logic change.
+    Formatting layer only.
+    - If duplicates exist → remove all 'No duplicates...' lines
+    - If no duplicates exist → show only one line
     """
-    duplicate_phrase = "the following combinations are forming duplicates"
 
+    duplicate_phrase = "the following combinations are forming duplicates"
+    no_dup_line = "No duplicates are forming with the existing parts."
+
+    # If any duplicates exist → remove all No-duplicate lines
     if duplicate_phrase in output:
-        output = output.replace(
-            "No duplicates are forming with the existing parts.\n",
-            ""
-        ).replace(
-            "No duplicates are forming with the existing parts.",
-            ""
-        )
+        output = output.replace(no_dup_line, "")
+        return output.strip()
+
+    # If no duplicates anywhere → show only ONE line
+    if no_dup_line in output:
+        return no_dup_line
 
     return output.strip()
 
@@ -248,3 +251,4 @@ elif mode == "Excel File Extraction":
 
         st.subheader("Output")
         st.code(output, language="text")
+
