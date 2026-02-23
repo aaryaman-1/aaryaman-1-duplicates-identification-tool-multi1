@@ -397,7 +397,7 @@ def load_excel_master_dataframe(file_path):
         format="mixed"
     )
 
-    OPEN_END_DATE = pd.Timestamp("2999-12-31")
+    OPEN_END_DATE = pd.Timestamp.max.normalize()
 
     df_master["Date application OEV fin"] = df_master[
         "Date application OEV fin"
@@ -513,5 +513,6 @@ def find_duplicates_multi_new(
             print()
     else:
         print("\nNo duplicates are forming with the existing parts.")
+
 
 
