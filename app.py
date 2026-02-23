@@ -39,6 +39,25 @@ def multiline_to_list(text):
     return [line.strip() for line in text.splitlines() if line.strip()]
 
 
+def clean_output_text(output: str):
+    """
+    Remove 'No duplicates...' if duplicates exist anywhere.
+    Pure formatting layer. No logic change.
+    """
+    duplicate_phrase = "the following combinations are forming duplicates"
+
+    if duplicate_phrase in output:
+        output = output.replace(
+            "No duplicates are forming with the existing parts.\n",
+            ""
+        ).replace(
+            "No duplicates are forming with the existing parts.",
+            ""
+        )
+
+    return output.strip()
+
+
 # =========================================================
 # MODE SELECTOR
 # =========================================================
@@ -124,6 +143,7 @@ Manual Mode Notes:
             )
 
         output = buffer.getvalue()
+        output = clean_output_text(output)
 
         st.subheader("Output")
         st.code(output, language="text")
@@ -214,7 +234,7 @@ elif mode == "Excel File Extraction":
                 )
 
             # ----------------------------------------------------
-            # NEW vs NEW (CRITICAL FIX - previously missing)
+            # NEW vs NEW
             # ----------------------------------------------------
             find_duplicates_multi_new(
                 new_ecdvs,
@@ -224,6 +244,7 @@ elif mode == "Excel File Extraction":
             )
 
         output = buffer.getvalue()
+        output = clean_output_text(output)
 
         st.subheader("Output")
         st.code(output, language="text")
