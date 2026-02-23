@@ -67,7 +67,7 @@ if mode == "Manual User Input":
 
     with col2:
         new_ecdvs_text = st.text_area(
-            "New / Modified ECDVs (one per line)",
+            "New / Modified Product's ECDVs (one per line)",
             height=200
         )
 
@@ -147,7 +147,7 @@ elif mode == "Excel File Extraction":
 
     with col2:
         new_ecdvs_text = st.text_area(
-            "New ECDVs (one per line)",
+            "New Product's ECDVs (one per line)",
             height=200
         )
 
@@ -219,3 +219,4 @@ elif mode == "Excel File Extraction":
 
         st.subheader("Output")
         st.text_area("Result", output, height=300)
+
