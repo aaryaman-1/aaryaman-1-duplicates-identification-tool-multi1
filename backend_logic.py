@@ -464,6 +464,23 @@ def find_duplicates_multi_new(
     # ---------------------------------------------------
     # NEW vs EXISTING
     # ---------------------------------------------------
+
+    # NEW RULE:
+    # Remove existing rows whose product numbers already exist in NEW list
+    filtered_existing = [
+        (pn, ev)
+        for pn, ev in zip(other_product_numbers, other_ecdvs)
+        if pn not in set(new_product_numbers)
+    ]
+
+    if filtered_existing:
+        filtered_other_product_numbers, filtered_other_ecdvs = zip(*filtered_existing)
+        filtered_other_product_numbers = list(filtered_other_product_numbers)
+        filtered_other_ecdvs = list(filtered_other_ecdvs)
+    else:
+        filtered_other_product_numbers = []
+        filtered_other_ecdvs = []
+
     for i in range(len(new_ecdvs)):
 
         buffer = io.StringIO()
@@ -471,9 +488,9 @@ def find_duplicates_multi_new(
         with contextlib.redirect_stdout(buffer):
             find_duplicates_one_to_many(
                 new_ecdvs[i],
-                other_ecdvs,
+                filtered_other_ecdvs,
                 new_product_numbers[i],
-                other_product_numbers
+                filtered_other_product_numbers
             )
 
         text = buffer.getvalue().strip()
@@ -513,6 +530,7 @@ def find_duplicates_multi_new(
             print()
     else:
         print("\nNo duplicates are forming with the existing parts.")
+
 
 
 
