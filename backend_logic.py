@@ -376,6 +376,7 @@ def load_excel_master_dataframe(file_path):
     required_columns = [
         "05 Numero produit",
         "02 Code fonction lien vehicule",
+        "Coefficient de montage",
         "ECDV",
         "Date application OEV debut",
         "Date application OEV fin"
