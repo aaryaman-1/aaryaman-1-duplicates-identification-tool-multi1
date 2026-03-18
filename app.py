@@ -165,7 +165,7 @@ elif mode == "Excel File Extraction":
     with col1:
         new_product_numbers_text = st.text_area(
             "New/Modified Product Numbers (one per line)",
-            height=200
+            height=100
         )
 
     with col2:
@@ -177,7 +177,7 @@ elif mode == "Excel File Extraction":
     with col3:
         new_dates_text = st.text_area(
             "New/Modified Product NFC Dates (YYYY-MM-DD)",
-            height=200
+            height=100
         )
 
     st.markdown("---")
